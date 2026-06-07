@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
+import { useState, useRef } from "react"
+import { motion, useScroll, useTransform } from "framer-motion"
 import { Users, Plus, MessageCircle, MapPin, ChevronRight } from "lucide-react"
 import { fadeUp, staggerContainer } from "@/lib/animations"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
@@ -45,6 +45,42 @@ const mockTrips = [
   },
 ]
 
+function ScrollRevealHeading() {
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.8", "end 0.2"],
+  })
+
+  const words = ["Travel", "Together"]
+  const wordColors = ["", " text-gradient italic"]
+
+  return (
+    <div ref={ref} className="text-center space-y-4">
+      <span className="text-xs tracking-[3px] uppercase text-[var(--color-primary)]">
+        Collaborative Trips
+      </span>
+      <h2 className="font-display text-4xl md:text-5xl font-bold leading-[0.93] tracking-[-2px] mt-3">
+        {words.map((word, i) => (
+          <motion.span
+            key={word}
+            className={`inline-block${wordColors[i]}`}
+            style={{ opacity: useTransform(scrollYProgress, [0.1 + i * 0.15, 0.4 + i * 0.15], [0, 1]), y: useTransform(scrollYProgress, [0.1 + i * 0.15, 0.4 + i * 0.15], [20, 0]) }}
+          >
+            {word}{" "}
+          </motion.span>
+        ))}
+      </h2>
+      <motion.p
+        style={{ opacity: useTransform(scrollYProgress, [0.5, 0.7], [0, 1]) }}
+        className="text-[var(--color-muted-foreground)] max-w-xl mx-auto"
+      >
+        Plan group trips with AI-powered consensus routing and real-time chat.
+      </motion.p>
+    </div>
+  )
+}
+
 export default function CollaborativeTrips() {
   const [showForm, setShowForm] = useState(false)
 
@@ -53,7 +89,7 @@ export default function CollaborativeTrips() {
       <div
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
         style={{
-          background: "radial-gradient(circle, hsl(175,95%,48%,0.05) 0%, transparent 70%)",
+          background: "radial-gradient(circle, hsl(40,90%,52%,0.03) 0%, transparent 70%)",
           filter: "blur(60px)",
         }}
       />
@@ -66,14 +102,7 @@ export default function CollaborativeTrips() {
           viewport={{ once: true, margin: "-100px" }}
           className="space-y-16"
         >
-          <motion.div variants={fadeUp} className="text-center space-y-4">
-            <h2 className="font-display text-4xl md:text-5xl font-bold">
-              Travel <span className="text-gradient">Together</span>
-            </h2>
-            <p className="text-[var(--color-muted-foreground)] max-w-xl mx-auto">
-              Plan group trips with AI-powered consensus routing and real-time chat.
-            </p>
-          </motion.div>
+          <ScrollRevealHeading />
 
           <motion.div variants={fadeUp} className="flex justify-center">
             <Button
@@ -121,50 +150,55 @@ export default function CollaborativeTrips() {
 
           <motion.div variants={fadeUp}>
             <div className="grid md:grid-cols-3 gap-6">
-              {mockTrips.map((trip) => (
-                <Card
+              {mockTrips.map((trip, idx) => (
+                <motion.div
                   key={trip.id}
-                  className="group cursor-pointer hover:border-[var(--color-primary)]/40 transition-all duration-300"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.1 * idx, ease: [0.25, 0.1, 0.25, 1] }}
                 >
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-display font-semibold text-lg">{trip.name}</h3>
-                      <Badge variant="secondary" className="flex-shrink-0">
-                        {trip.score}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {trip.members.map((m) => (
-                          <Avatar key={m.name} className="w-8 h-8 border-2 border-[var(--color-background)]">
-                            <AvatarFallback className="text-[10px] bg-[var(--color-muted)]">
-                              {m.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                        ))}
+                  <Card className="group cursor-pointer hover:border-[var(--color-primary)]/40 transition-all duration-300">
+                    <CardContent className="p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-display text-lg leading-[0.93]" style={{ letterSpacing: "-0.5px" }}>{trip.name}</h3>
+                        <Badge variant="secondary" className="flex-shrink-0">
+                          {trip.score}
+                        </Badge>
                       </div>
-                      <span className="text-xs text-[var(--color-muted-foreground)]">
-                        {trip.members.length} members
-                      </span>
-                    </div>
 
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-muted)]/50">
-                      <MessageCircle className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-[var(--color-muted-foreground)] italic">
-                        "{trip.preview}"
-                      </p>
-                    </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex -space-x-2">
+                          {trip.members.map((m) => (
+                            <Avatar key={m.name} className="w-8 h-8 border-2 border-[var(--color-background)]">
+                              <AvatarFallback className="text-[10px] bg-[var(--color-muted)]">
+                                {m.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </div>
+                        <span className="text-xs text-[var(--color-muted-foreground)]">
+                          {trip.members.length} members
+                        </span>
+                      </div>
 
-                    <div className="flex items-center justify-between text-sm text-[var(--color-muted-foreground)] group-hover:text-[var(--color-primary)] transition-colors">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        View consensus route
-                      </span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-muted)]/50">
+                        <MessageCircle className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-[var(--color-muted-foreground)] italic">
+                          "{trip.preview}"
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm text-[var(--color-muted-foreground)] group-hover:text-[var(--color-primary)] transition-colors">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          View consensus route
+                        </span>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           </motion.div>

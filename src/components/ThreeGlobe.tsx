@@ -23,10 +23,10 @@ function GlobeInner({ autoRotate = true, routeCoords }: { autoRotate?: boolean; 
 
   useFrame((_, delta) => {
     if (groupRef.current && autoRotate) {
-      groupRef.current.rotation.y += delta * 0.15
+      groupRef.current.rotation.y += delta * 0.12
     }
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.05
+      meshRef.current.rotation.y += delta * 0.04
     }
   })
 
@@ -35,26 +35,26 @@ function GlobeInner({ autoRotate = true, routeCoords }: { autoRotate?: boolean; 
       <mesh ref={meshRef}>
         <sphereGeometry args={[2, 64, 64]} />
         <MeshDistortMaterial
-          color="#0a1628"
-          emissive="#00f0d8"
-          emissiveIntensity={0.08}
-          roughness={0.4}
-          metalness={0.6}
+          color="#0a0806"
+          emissive="#c99f2e"
+          emissiveIntensity={0.06}
+          roughness={0.5}
+          metalness={0.3}
           wireframe
-          distort={0.1}
-          speed={0.5}
+          distort={0.08}
+          speed={0.4}
         />
       </mesh>
 
       <mesh>
         <sphereGeometry args={[2.02, 64, 64]} />
-        <meshBasicMaterial color="#00f0d8" wireframe transparent opacity={0.08} />
+        <meshBasicMaterial color="#c99f2e" wireframe transparent opacity={0.06} />
       </mesh>
 
       {routePoints && (
         <Line
           points={routePoints}
-          color="#00f0d8"
+          color="#c99f2e"
           lineWidth={2}
           dashed={false}
         />
@@ -63,13 +63,13 @@ function GlobeInner({ autoRotate = true, routeCoords }: { autoRotate?: boolean; 
       {routePoints && routePoints.map((p, i) => (
         <mesh key={`marker-${i}`} position={p}>
           <sphereGeometry args={[0.06, 16, 16]} />
-          <meshBasicMaterial color={i === 0 ? "#7c3aed" : "#00f0d8"} />
+          <meshBasicMaterial color={i === 0 ? "#c99f2e" : "#f0d080"} />
         </mesh>
       ))}
 
-      <ambientLight intensity={0.3} />
-      <pointLight position={[5, 5, 5]} intensity={0.8} color="#00f0d8" />
-      <pointLight position={[-5, -3, 2]} intensity={0.4} color="#7c3aed" />
+      <ambientLight intensity={0.2} />
+      <pointLight position={[5, 5, 5]} intensity={0.6} color="#c99f2e" />
+      <pointLight position={[-5, -3, 2]} intensity={0.3} color="#d4a030" />
     </group>
   )
 }

@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import ThroutteGlobe from "./ThreeGlobe"
-import type { RouteOption } from "@/hooks/useRouteEngine"
+import ThreeGlobe from "./ThreeGlobe"
+import type { ProviderOption } from "@/lib/providers"
 import { formatDuration, formatDistance } from "@/lib/utils"
 import { fadeUp, staggerContainer } from "@/lib/animations"
-import { Clock, DollarSign, Leaf, Navigation, Share2, Save, Star } from "lucide-react"
+import { Clock, DollarSign, Leaf, Navigation, Share2, Save, Star, Award, Zap, BarChart3 } from "lucide-react"
 
-export default function RouteDetailModal({ route }: { route: RouteOption }) {
+export default function RouteDetailModal({ provider }: { provider: ProviderOption }) {
   const mockCoords: [number, number][] = [
     [-122.4194, 37.7749],
     [-122.4, 37.78],
@@ -26,17 +26,19 @@ export default function RouteDetailModal({ route }: { route: RouteOption }) {
     [-122.2711, 37.8044],
   ]
 
+  const d = provider.scoreBreakdown
+
   return (
     <DialogContent className="sm:max-w-4xl">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-3">
-          {route.icon} {route.label}
+          {provider.icon} {provider.name}
           <Badge variant="accent" className="ml-2">
-            SuperScore: {route.score.total}
+            Score: {provider.score}
           </Badge>
         </DialogTitle>
         <DialogDescription>
-          Detailed route information and 3D preview
+          {provider.type} &middot; {provider.details}
         </DialogDescription>
       </DialogHeader>
 
@@ -49,34 +51,37 @@ export default function RouteDetailModal({ route }: { route: RouteOption }) {
         <motion.div variants={fadeUp} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             {[
-              { icon: Clock, label: "Duration", value: formatDuration(route.route.duration), color: "text-[var(--color-primary)]" },
-              { icon: Navigation, label: "Distance", value: formatDistance(route.route.distance), color: "text-[var(--color-secondary)]" },
-              { icon: DollarSign, label: "Est. Cost", value: `$${(route.route.distance * 0.002).toFixed(2)}`, color: "text-[var(--color-accent)]" },
-              { icon: Leaf, label: "CO₂ Saved", value: `${route.co2Saved}g`, color: "text-green-400" },
+              { icon: Clock, label: "Duration", value: formatDuration(provider.duration), color: "text-[var(--color-primary)]" },
+              { icon: Navigation, label: "Distance", value: formatDistance(provider.distance), color: "text-[var(--color-muted-foreground)]" },
+              { icon: DollarSign, label: "Price", value: `$${provider.price.toFixed(2)}`, color: "text-[var(--color-muted-foreground)]" },
+              { icon: Leaf, label: "CO₂", value: `${provider.co2}g`, color: "text-[var(--color-muted-foreground)]" },
             ].map((s) => (
               <div key={s.label} className="liquid-glass rounded-[var(--radius)] p-4 text-center">
                 <s.icon className={`w-5 h-5 ${s.color} mx-auto mb-2`} />
-                <p className="font-display text-lg font-bold">{s.value}</p>
+                <p className="font-display text-lg font-bold leading-[0.93]">{s.value}</p>
                 <p className="text-xs text-[var(--color-muted-foreground)]">{s.label}</p>
               </div>
             ))}
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-display font-semibold text-sm uppercase tracking-wider text-[var(--color-muted-foreground)]">
-              Route Score Breakdown
+            <h4 className="text-sm uppercase tracking-[3px] text-[var(--color-primary)]">
+              Score Breakdown
             </h4>
             <div className="space-y-2">
               {[
-                { label: "Speed", value: route.score.speed, color: "bg-[var(--color-primary)]" },
-                { label: "Cost Efficiency", value: route.score.cost, color: "bg-[var(--color-accent)]" },
-                { label: "Eco Friendliness", value: route.score.eco, color: "bg-green-400" },
-                { label: "Enjoyability", value: route.score.enjoyability, color: "bg-[var(--color-secondary)]" },
+                { label: "Speed", value: d.speed, icon: Zap, color: "bg-[var(--color-primary)]" },
+                { label: "Cost Efficiency", value: d.cost, icon: DollarSign, color: "bg-[var(--color-accent)]" },
+                { label: "Eco Friendliness", value: d.eco, icon: Leaf, color: "bg-[var(--color-muted-foreground)]" },
+                { label: "Convenience", value: d.convenience, icon: Award, color: "bg-[var(--color-secondary)]" },
               ].map((s) => (
                 <div key={s.label} className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--color-muted-foreground)]">{s.label}</span>
-                    <span className="font-display font-bold">{s.value}/100</span>
+                    <span className="flex items-center gap-1.5 text-[var(--color-muted-foreground)]">
+                      <s.icon className="w-3.5 h-3.5" />
+                      {s.label}
+                    </span>
+                    <span className="font-display font-bold leading-[0.93]">{s.value}/100</span>
                   </div>
                   <div className="h-2 rounded-full bg-[var(--color-muted)] overflow-hidden">
                     <motion.div
@@ -91,40 +96,63 @@ export default function RouteDetailModal({ route }: { route: RouteOption }) {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="font-display font-semibold text-sm uppercase tracking-wider text-[var(--color-muted-foreground)]">
-              Directions
+          <div className="space-y-2">
+            <h4 className="text-sm uppercase tracking-[3px] text-[var(--color-primary)]">
+              Details
             </h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-              {route.route.steps.map((step, i) => (
-                <div key={i} className="flex items-start gap-3 p-2 rounded-lg hover:bg-[var(--color-muted)]/50 transition-colors">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">
-                    {i + 1}
-                  </span>
-                  <div>
-                    <p className="text-sm">{step.instruction}</p>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {step.name} &middot; {formatDistance(step.distance)}
-                    </p>
-                  </div>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--color-muted-foreground)]">Provider</span>
+                <span>{provider.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-muted-foreground)]">Type</span>
+                <span className="capitalize">{provider.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-muted-foreground)]">Rating</span>
+                <span>{provider.rating.toFixed(1)} / 5.0</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-muted-foreground)]">Availability</span>
+                <span>{Math.round(provider.availability * 100)}%</span>
+              </div>
+              {provider.vehicleType && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-muted-foreground)]">Vehicle</span>
+                  <span>{provider.vehicleType}</span>
                 </div>
-              ))}
+              )}
+              {provider.departureTime && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-muted-foreground)]">Departure</span>
+                  <span>{provider.departureTime}</span>
+                </div>
+              )}
+              {provider.arrivalTime && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-muted-foreground)]">Arrival</span>
+                  <span>{provider.arrivalTime}</span>
+                </div>
+              )}
+              {provider.stops !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-muted-foreground)]">Stops</span>
+                  <span>{provider.stops}</span>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
 
         <motion.div variants={fadeUp} className="space-y-4">
           <div className="aspect-square rounded-[var(--radius)] overflow-hidden liquid-glass">
-            <ThroutteGlobe
-              className="w-full h-full"
-              routeCoords={mockCoords}
-              autoRotate={false}
-            />
+            <ThreeGlobe className="w-full h-full" routeCoords={mockCoords} autoRotate={false} />
           </div>
 
           <div className="flex flex-wrap gap-3">
             <Button className="flex-1 gap-2">
-              <Save className="w-4 h-4" /> Save Route
+              <Save className="w-4 h-4" /> Book via {provider.name.split(" ")[0]}
             </Button>
             <Button variant="secondary" className="flex-1 gap-2">
               <Share2 className="w-4 h-4" /> Share
@@ -135,8 +163,8 @@ export default function RouteDetailModal({ route }: { route: RouteOption }) {
           </div>
 
           <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
-            <Star className="w-4 h-4 text-[var(--color-accent)]" />
-            <span>Rate this route to improve future recommendations</span>
+            <Star className="w-4 h-4 text-[var(--color-primary)]" />
+            <span>Rate this provider to improve recommendations</span>
           </div>
         </motion.div>
       </motion.div>

@@ -15,7 +15,7 @@ export default function Hero() {
 
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.6], [1, 0.9])
-  const y = useTransform(scrollYProgress, [0, 0.6], [0, -100])
+  const y = useTransform(scrollYProgress, [0, 0.6], [0, -80])
 
   const scrollToPlanner = () => {
     document.getElementById("route-planner")?.scrollIntoView({ behavior: "smooth" })
@@ -26,18 +26,18 @@ export default function Hero() {
       ref={ref}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(240,15%,6%)] via-[hsl(240,12%,8%)] to-[hsl(240,15%,6%)]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,10%,4%)] via-[hsl(30,8%,6%)] to-[hsl(30,10%,4%)]" />
       <div
         className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{
-          background: "radial-gradient(circle, hsl(175,95%,48%,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(circle, hsl(40,90%,52%,0.06) 0%, transparent 70%)",
           filter: "blur(60px)",
         }}
       />
 
       <motion.div
         className="absolute inset-0 z-0"
-        style={{ opacity: useTransform(scrollYProgress, [0, 0.5], [0.4, 0]), scale }}
+        style={{ opacity: useTransform(scrollYProgress, [0, 0.5], [0.3, 0]), scale }}
       >
         <ThreeGlobe className="w-full h-full" />
       </motion.div>
@@ -53,18 +53,18 @@ export default function Hero() {
           className="space-y-8"
         >
           <motion.div variants={fadeUp}>
-            <span className="inline-block px-4 py-1.5 text-xs font-semibold tracking-widest uppercase rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 text-[var(--color-primary)] mb-6">
-              Built for Milpitas Hacks 3.0
+            <span className="inline-block px-4 py-1.5 text-xs tracking-[3px] uppercase text-[var(--color-primary)] mb-6">
+              Routes that learn. Journeys that inspire.
             </span>
           </motion.div>
 
           <motion.h1
             variants={fadeUp}
-            className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight"
+            className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.93] tracking-[-2.5px]"
           >
             Every route is a
             <br />
-            <span className="text-gradient">SuperRoute</span>
+            <span className="text-gradient italic">SuperRoute</span>
           </motion.h1>
 
           <motion.p
@@ -92,7 +92,7 @@ export default function Hero() {
       </motion.div>
 
       <div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer"
         onClick={scrollToPlanner}
       >
         <svg
@@ -102,7 +102,7 @@ export default function Hero() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="text-[var(--color-muted-foreground)] cursor-pointer hover:text-[var(--color-primary)] transition-colors"
+          className="text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors"
         >
           <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
         </svg>

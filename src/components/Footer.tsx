@@ -7,14 +7,14 @@ export default function Footer() {
     <footer className="relative border-t border-[var(--color-border)] py-12 px-4">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full cyan-gradient flex items-center justify-center">
-            <span className="text-xs font-bold text-black">SR</span>
+          <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center">
+            <span className="text-xs font-bold" style={{ color: "hsl(30 10% 4%)" }}>SR</span>
           </div>
-          <span className="font-display font-semibold text-lg">SuperRoute</span>
+          <span className="font-display text-lg" style={{ letterSpacing: "-0.5px" }}>SuperRoute</span>
         </div>
 
         <p className="text-sm text-[var(--color-muted-foreground)] text-center">
-          Built for <span className="font-semibold text-[var(--color-primary)]">Milpitas Hacks 3.0</span>
+          Routes that <span className="font-semibold text-[var(--color-primary)]">learn</span>
           {" · "}Routes that learn. Journeys that inspire.
         </p>
 

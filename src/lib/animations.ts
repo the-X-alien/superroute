@@ -1,7 +1,7 @@
 import type { Variants } from "framer-motion"
 
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 60 },
+  hidden: { opacity: 0, y: 40 },
   visible: {
     opacity: 1,
     y: 0,
@@ -27,17 +27,26 @@ export const staggerContainer: Variants = {
   },
 }
 
+export const staggerChild: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
+  },
+}
+
 export const scaleIn: Variants = {
-  hidden: { opacity: 0, scale: 0.9 },
+  hidden: { opacity: 0, scale: 0.92 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
   },
 }
 
 export const slideInLeft: Variants = {
-  hidden: { opacity: 0, x: -80 },
+  hidden: { opacity: 0, x: -60 },
   visible: {
     opacity: 1,
     x: 0,
@@ -46,7 +55,7 @@ export const slideInLeft: Variants = {
 }
 
 export const slideInRight: Variants = {
-  hidden: { opacity: 0, x: 80 },
+  hidden: { opacity: 0, x: 60 },
   visible: {
     opacity: 1,
     x: 0,
@@ -55,11 +64,11 @@ export const slideInRight: Variants = {
 }
 
 export const cardHover = {
-  rest: { scale: 1, borderColor: "hsl(240 12% 18% / 0.5)" },
+  rest: { scale: 1, borderColor: "hsl(30 10% 16% / 0.5)" },
   hover: {
     scale: 1.02,
-    borderColor: "hsl(175 95% 48% / 0.3)",
-    transition: { duration: 0.3, ease: "easeOut" },
+    borderColor: "hsl(40 90% 52% / 0.25)",
+    transition: { duration: 0.25, ease: "easeOut" },
   },
 }
 
@@ -73,7 +82,7 @@ export const modalSheet: Variants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: { type: "spring", damping: 30, stiffness: 300 },
+    transition: { type: "spring" as const, damping: 30, stiffness: 300 },
   },
   exit: {
     y: "100%",

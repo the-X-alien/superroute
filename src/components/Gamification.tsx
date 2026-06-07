@@ -2,15 +2,15 @@
 
 import { motion } from "framer-motion"
 import { Trophy, TrendingUp, Flame, Star, Medal, Award, Zap } from "lucide-react"
-import { fadeUp, staggerContainer, counterAnimation } from "@/lib/animations"
+import { fadeUp, staggerContainer, staggerChild, counterAnimation } from "@/lib/animations"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatPoints } from "@/lib/utils"
 
 const stats = [
-  { icon: Trophy, label: "Total SuperPoints", value: 2847, color: "text-[var(--color-accent)]" },
+  { icon: Trophy, label: "Total SuperPoints", value: 2847, color: "text-[var(--color-primary)]" },
   { icon: TrendingUp, label: "Global Rank", value: "Top 12%", color: "text-[var(--color-primary)]" },
-  { icon: Flame, label: "Streak", value: "7 days", color: "text-orange-400" },
+  { icon: Flame, label: "Streak", value: "7 days", color: "text-[var(--color-primary)]" },
 ]
 
 const badges = [
@@ -37,7 +37,7 @@ export default function Gamification() {
       <div
         className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none"
         style={{
-          background: "radial-gradient(circle, hsl(260,80%,55%,0.06) 0%, transparent 70%)",
+          background: "radial-gradient(circle, hsl(40,90%,52%,0.04) 0%, transparent 70%)",
           filter: "blur(60px)",
         }}
       />
@@ -51,8 +51,11 @@ export default function Gamification() {
           className="space-y-16"
         >
           <motion.div variants={fadeUp} className="text-center space-y-4">
-            <h2 className="font-display text-4xl md:text-5xl font-bold">
-              Your <span className="text-gradient">SuperScore</span> Journey
+            <span className="text-xs tracking-[3px] uppercase text-[var(--color-primary)]">
+              Gamification
+            </span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold leading-[0.93] tracking-[-2px] mt-3">
+              Your <span className="text-gradient italic">SuperScore</span> Journey
             </h2>
             <p className="text-[var(--color-muted-foreground)] max-w-xl mx-auto">
               Every eco-friendly choice earns you points. Climb the ranks and unlock achievements.
@@ -69,7 +72,7 @@ export default function Gamification() {
                       className="flex flex-col items-center gap-3"
                     >
                       <s.icon className={`w-8 h-8 ${s.color}`} />
-                      <p className="font-display text-3xl font-bold">{s.value}</p>
+                      <p className="font-display text-3xl font-bold leading-[0.93]">{s.value}</p>
                       <p className="text-sm text-[var(--color-muted-foreground)]">{s.label}</p>
                     </motion.div>
                   </CardContent>
@@ -104,7 +107,7 @@ export default function Gamification() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-[var(--color-accent)]" />
+                    <Trophy className="w-5 h-5 text-[var(--color-primary)]" />
                     Leaderboard
                   </CardTitle>
                 </CardHeader>
@@ -125,11 +128,11 @@ export default function Gamification() {
                           <span
                             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                               user.rank === 1
-                                ? "bg-[var(--color-accent)] text-black"
+                                ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
                                 : user.rank === 2
                                   ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
                                   : user.rank === 3
-                                    ? "bg-orange-800/50 text-orange-300"
+                                    ? "bg-[var(--color-accent)]/50 text-[var(--color-primary)]"
                                     : "text-[var(--color-muted-foreground)]"
                             }`}
                           >
@@ -137,7 +140,7 @@ export default function Gamification() {
                           </span>
                           <span className="text-sm font-medium">{user.name}</span>
                         </div>
-                        <span className="font-display font-bold text-sm">
+                        <span className="font-display font-bold text-sm leading-[0.93]">
                           {formatPoints(user.points)} pts
                         </span>
                       </div>

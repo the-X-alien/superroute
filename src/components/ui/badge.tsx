@@ -13,7 +13,7 @@ const badgeVariants = cva(
           "border-transparent bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]",
         accent:
           "border-transparent bg-[var(--color-accent)] text-[var(--color-accent-foreground)]",
-        outline: "text-[var(--color-foreground)]",
+        outline: "text-[var(--color-foreground)] border-[var(--color-border)]",
       },
     },
     defaultVariants: {
