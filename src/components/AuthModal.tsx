@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 
 export default function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { user, signIn, signOut, isAvailable } = useAuth()
+  const { user, signInWithGoogle, signOut, ready } = useAuth()
 
   if (!open) return null
 
@@ -40,15 +40,15 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
             {user ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="" className="w-12 h-12 rounded-full" />
+                  {user.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="" className="w-12 h-12 rounded-full" />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center">
                       <User className="w-6 h-6 text-[var(--color-muted-foreground)]" />
                     </div>
                   )}
                   <div>
-                    <p className="font-medium">{user.displayName || "User"}</p>
+                    <p className="font-medium">{user.user_metadata?.full_name || user.email?.split("@")[0] || "User"}</p>
                     <p className="text-sm text-[var(--color-muted-foreground)]">{user.email}</p>
                   </div>
                 </div>
@@ -58,8 +58,8 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
               </div>
             ) : (
               <div className="space-y-3">
-                {isAvailable ? (
-                  <Button className="w-full gap-2" onClick={() => { signIn(); onClose() }}>
+                {ready ? (
+                  <Button className="w-full gap-2" onClick={() => { signInWithGoogle(); onClose() }}>
                     <Globe className="w-4 h-4" /> Continue with Google
                   </Button>
                 ) : (

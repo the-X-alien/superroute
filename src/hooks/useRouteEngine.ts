@@ -33,6 +33,7 @@ export function useRouteEngine() {
   const [error, setError] = useState<string | null>(null)
   const [previousOrigin, setPreviousOrigin] = useState<string>("")
   const [previousDest, setPreviousDest] = useState<string>("")
+  const [prefs, setPrefs] = useState<RoutePreferences>({ speed: 50, cost: 50, eco: 50 })
 
   const findRoutes = useCallback(
     async (
@@ -276,5 +277,5 @@ export function useRouteEngine() {
     [],
   )
 
-  return { result, loading, error, findRoutes, previousOrigin, previousDest }
+  return { result, loading, error, findRoutes, previousOrigin, previousDest, prefs, setPrefs }
 }

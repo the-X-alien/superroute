@@ -9,23 +9,12 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import ThreeGlobe from "./ThreeGlobe"
 import type { ProviderOption } from "@/lib/providers"
 import { formatDuration, formatDistance } from "@/lib/utils"
 import { fadeUp, staggerContainer } from "@/lib/animations"
-import { Clock, DollarSign, Leaf, Navigation, Share2, Save, Star, Award, Zap, BarChart3 } from "lucide-react"
+import { Clock, DollarSign, Leaf, Navigation, Share2, Save, Star, Award, Map, Zap } from "lucide-react"
 
 export default function RouteDetailModal({ provider }: { provider: ProviderOption }) {
-  const mockCoords: [number, number][] = [
-    [-122.4194, 37.7749],
-    [-122.4, 37.78],
-    [-122.38, 37.79],
-    [-122.35, 37.8],
-    [-122.32, 37.8],
-    [-122.3, 37.8],
-    [-122.2711, 37.8044],
-  ]
-
   const d = provider.scoreBreakdown
 
   return (
@@ -146,8 +135,14 @@ export default function RouteDetailModal({ provider }: { provider: ProviderOptio
         </motion.div>
 
         <motion.div variants={fadeUp} className="space-y-4">
-          <div className="aspect-square rounded-[var(--radius)] overflow-hidden liquid-glass">
-            <ThreeGlobe className="w-full h-full" routeCoords={mockCoords} autoRotate={false} />
+          <div className="aspect-square rounded-[var(--radius)] overflow-hidden liquid-glass flex items-center justify-center">
+            <div className="text-center space-y-3">
+              <Map className="w-12 h-12 text-[var(--color-primary)] mx-auto" />
+              <p className="text-sm text-[var(--color-muted-foreground)]">Route visualization</p>
+              <p className="text-xs text-[var(--color-muted-foreground)/60]">
+                {provider.mode === "flight" ? "Flight path" : "Road route"} &middot; {formatDistance(provider.distance)}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">

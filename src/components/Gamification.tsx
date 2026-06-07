@@ -44,7 +44,7 @@ export default function Gamification() {
         { name: "EcoRider42", points: 12500, rank: 1 },
         { name: "RouteNinja", points: 10800, rank: 2 },
         { name: "GreenCommuter", points: 9200, rank: 3 },
-        { name: user.displayName || "You", points: 8100, rank: 4 },
+        { name: user.user_metadata?.full_name || user.email?.split("@")[0] || "You", points: 8100, rank: 4 },
         { name: "TransitKing", points: 7900, rank: 5 },
         { name: "BikeLife", points: 7400, rank: 6 },
       ]
