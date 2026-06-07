@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(240 15% 6%);
+  --color-foreground: hsl(210 20% 98%);
+  --color-card: hsl(240 12% 10%);
+  --color-card-foreground: hsl(210 20% 98%);
+  --color-primary: hsl(175 95% 48%);
+  --color-primary-foreground: hsl(240 15% 6%);
+  --color-secondary: hsl(260 80% 55%);
+  --color-secondary-foreground: hsl(210 20% 98%);
+  --color-muted: hsl(240 10% 14%);
+  --color-muted-foreground: hsl(220 10% 60%);
+  --color-accent: hsl(45 100% 55%);
+  --color-accent-foreground: hsl(240 15% 6%);
+  --color-border: hsl(240 12% 18%);
+  --color-input: hsl(240 12% 18%);
+  --color-ring: hsl(175 95% 48%);
+  --color-destructive: hsl(0 62% 50%);
+  --color-destructive-foreground: hsl(210 20% 98%);
+  --color-success: hsl(160 60% 45%);
+  --radius: 0.75rem;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: hsl(175 95% 48% / 0.3);
+    color: hsl(210 20% 98%);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(240 15% 6%);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(240 12% 18%);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(175 95% 48% / 0.5);
+  }
+}
+
+@layer utilities {
+  .glass-light {
+    background: hsl(240 12% 10% / 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(240 12% 18% / 0.5);
+  }
+
+  .glass-strong {
+    background: hsl(240 12% 10% / 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(240 12% 18% / 0.8);
+  }
+
+  .liquid-glass {
+    background: linear-gradient(
+      135deg,
+      hsl(240 12% 10% / 0.7),
+      hsl(240 10% 14% / 0.5)
+    );
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(240 12% 18% / 0.4);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.2);
+  }
+
+  .liquid-glass-strong {
+    background: linear-gradient(
+      135deg,
+      hsl(240 12% 10% / 0.85),
+      hsl(240 10% 14% / 0.7)
+    );
+    backdrop-filter: blur(24px);
+    border: 1px solid hsl(240 12% 18% / 0.6);
+    box-shadow: 0 12px 48px hsl(0 0% 0% / 0.3);
+  }
+
+  .cyan-glow {
+    box-shadow: 0 0 20px hsl(175 95% 48% / 0.15),
+                0 0 60px hsl(175 95% 48% / 0.05);
+  }
+
+  .cyan-glow-strong {
+    box-shadow: 0 0 30px hsl(175 95% 48% / 0.25),
+                0 0 80px hsl(175 95% 48% / 0.1);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(175 95% 48%), hsl(260 80% 55%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cyan-gradient {
+    background: linear-gradient(135deg, hsl(175 95% 48%), hsl(260 80% 55%));
+  }
+
+  .glow-particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background: hsl(175 95% 48%);
+    filter: blur(4px);
+    opacity: 0.6;
+  }
+
+  .mapboxgl-map {
+    border-radius: var(--radius);
+  }
+
+  .mapboxgl-ctrl-geocoder {
+    background: hsl(240 12% 10% / 0.8) !important;
+    border: 1px solid hsl(240 12% 18% / 0.5) !important;
+    color: hsl(210 20% 98%) !important;
+    border-radius: var(--radius) !important;
+  }
+
+  input.mapboxgl-ctrl-geocoder--input {
+    color: hsl(210 20% 98%) !important;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
