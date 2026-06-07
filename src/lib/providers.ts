@@ -22,6 +22,8 @@ export interface ProviderOption {
   arrivalTime?: string
   stops?: number
   bookingUrl?: string
+  origin?: [number, number]
+  destination?: [number, number]
 }
 
 export interface RegionContext {

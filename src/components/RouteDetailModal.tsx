@@ -1,5 +1,4 @@
-"use client"
-
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   DialogContent,
@@ -13,12 +12,28 @@ import type { ProviderOption } from "@/lib/providers"
 import { formatDuration, formatDistance } from "@/lib/utils"
 import { fadeUp, staggerContainer } from "@/lib/animations"
 import { Clock, DollarSign, Leaf, Navigation, Share2, Save, Star, Award, Map, Zap } from "lucide-react"
+import RouteMap from "./RouteMap"
 
 export default function RouteDetailModal({ provider }: { provider: ProviderOption }) {
   const d = provider.scoreBreakdown
+  const [originCoords, setOriginCoords] = useState<[number, number] | null>(null)
+  const [destCoords, setDestCoords] = useState<[number, number] | null>(null)
+
+  useEffect(() => {
+    if (provider.origin) {
+      setOriginCoords([provider.origin[1], provider.origin[0]])
+    }
+    if (provider.destination) {
+      setDestCoords([provider.destination[1], provider.destination[0]])
+    }
+  }, [provider.origin, provider.destination])
+
+  const bookingUrl = provider.bookingUrl || 
+    (provider.mode === "flight" && provider.bookingUrl) ||
+    `https://www.google.com/search?q=${encodeURIComponent(provider.name + " " + provider.type + " booking")}`
 
   return (
-    <DialogContent className="sm:max-w-4xl">
+    <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-3">
           {provider.icon} {provider.name}
@@ -27,7 +42,7 @@ export default function RouteDetailModal({ provider }: { provider: ProviderOptio
           </Badge>
         </DialogTitle>
         <DialogDescription>
-          {provider.type} &middot; {provider.details}
+          {provider.type} · {provider.details}
         </DialogDescription>
       </DialogHeader>
 
@@ -135,26 +150,61 @@ export default function RouteDetailModal({ provider }: { provider: ProviderOptio
         </motion.div>
 
         <motion.div variants={fadeUp} className="space-y-4">
-          <div className="aspect-square rounded-[var(--radius)] overflow-hidden liquid-glass flex items-center justify-center">
-            <div className="text-center space-y-3">
-              <Map className="w-12 h-12 text-[var(--color-primary)] mx-auto" />
-              <p className="text-sm text-[var(--color-muted-foreground)]">Route visualization</p>
-              <p className="text-xs text-[var(--color-muted-foreground)/60]">
-                {provider.mode === "flight" ? "Flight path" : "Road route"} &middot; {formatDistance(provider.distance)}
-              </p>
-            </div>
+          <div className="aspect-square rounded-[var(--radius)] overflow-hidden liquid-glass">
+            {originCoords && destCoords ? (
+              <RouteMap 
+                origin={originCoords} 
+                destination={destCoords} 
+                mode={provider.mode} 
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center space-y-3">
+                  <Map className="w-12 h-12 text-[var(--color-primary)] mx-auto" />
+                  <p className="text-sm text-[var(--color-muted-foreground)]">Route visualization</p>
+                  <p className="text-xs text-[var(--color-muted-foreground)/60]">
+                    {provider.mode === "flight" ? "Flight path" : "Road route"} · {formatDistance(provider.distance)}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button className="flex-1 gap-2">
-              <Save className="w-4 h-4" /> Book via {provider.name.split(" ")[0]}
-            </Button>
-            <Button variant="secondary" className="flex-1 gap-2">
+            <a 
+              href={bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1"
+            >
+              <Button className="w-full gap-2">
+                <Save className="w-4 h-4" /> Book via {provider.name.split(" ")[0]}
+              </Button>
+            </a>
+            <Button 
+              variant="secondary" 
+              className="flex-1 gap-2"
+              onClick={() => {
+                const text = `${provider.name} - $${provider.price.toFixed(2)}, ${formatDuration(provider.duration)}, ${formatDistance(provider.distance)}`
+                if (navigator.share) {
+                  navigator.share({ title: provider.name, text })
+                } else {
+                  navigator.clipboard.writeText(text)
+                }
+              }}
+            >
               <Share2 className="w-4 h-4" /> Share
             </Button>
-            <Button variant="outline" className="flex-1 gap-2">
-              <Navigation className="w-4 h-4" /> Navigate
-            </Button>
+            <a 
+              href={destCoords ? `https://www.google.com/maps/dir/?api=1&destination=${destCoords[0]},${destCoords[1]}` : `https://www.google.com/maps/search/?api=1&query=Beijing`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1"
+            >
+              <Button variant="outline" className="w-full gap-2">
+                <Navigation className="w-4 h-4" /> Navigate
+              </Button>
+            </a>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">

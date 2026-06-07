@@ -94,6 +94,8 @@ export function useRouteEngine() {
             rating: 5.0,
             availability: 1,
             details: `${distKm.toFixed(1)} km walk`,
+            origin,
+            destination,
           })
         }
 
@@ -115,6 +117,8 @@ export function useRouteEngine() {
             rating: 4.5,
             availability: 0.8,
             details: `${distKm.toFixed(1)} km ride`,
+            origin,
+            destination,
           })
         }
 
@@ -142,6 +146,8 @@ export function useRouteEngine() {
             rating: 4.5,
             availability: 0.9,
             details: `Lyft · ${est.displayName}`,
+            origin,
+            destination,
           })
         })
 
@@ -163,56 +169,66 @@ export function useRouteEngine() {
             rating: 4.6,
             availability: 0.95,
             details: `Uber · ${est.displayName}`,
+            origin,
+            destination,
           })
         })
 
-        // 3. Transit
-        const transitAgencies = await getTransitAgenciesByLocation(origin[1], origin[0])
-        transitAgencies.slice(0, 3).forEach((agency, i) => {
-          const s = rid + i
-          providers.push({
-            id: `transit-${agency.onestopId}-${s}`,
-            name: agency.name,
-            mode: "transit",
-            type: "transit",
-            icon: "🚌",
-            price: 2.50,
-            priceCurrency: "USD",
-            duration: Math.round(baseSeconds * 1.5),
-            distance: drivingData.distance * 1.1,
-            co2: 30,
-            co2Saved: 170,
-            score: 0,
-            scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: 4.0,
-            availability: 0.8,
-            details: `Transit via ${agency.name}`,
+        // 3. Transit (only for distances < 200km)
+        if (distKm < 200) {
+          const transitAgencies = await getTransitAgenciesByLocation(origin[1], origin[0])
+          transitAgencies.slice(0, 3).forEach((agency, i) => {
+            const s = rid + i
+            providers.push({
+              id: `transit-${agency.onestopId}-${s}`,
+              name: agency.name,
+              mode: "transit",
+              type: "transit",
+              icon: "🚌",
+              price: 2.50,
+              priceCurrency: "USD",
+              duration: Math.round(baseSeconds * 1.5),
+              distance: drivingData.distance * 1.1,
+              co2: 30,
+              co2Saved: 170,
+              score: 0,
+              scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
+              rating: 4.0,
+              availability: 0.8,
+              details: `Transit via ${agency.name}`,
+              origin,
+              destination,
+            })
           })
-        })
+        }
 
-        // 4. Car Rental
-        const carRentals = await getCarRentalOffers(origin[1], origin[0], new Date().toISOString(), new Date(Date.now() + 86400000).toISOString())
-        carRentals.forEach((rental, i) => {
-          providers.push({
-            id: `car-rental-${i}-${rid}`,
-            name: rental.company,
-            mode: "car_rental",
-            type: "car_rental",
-            icon: "🚗",
-            price: rental.price,
-            priceCurrency: "USD",
-            duration: baseSeconds,
-            distance: drivingData.distance,
-            co2: 160,
-            co2Saved: 40,
-            score: 0,
-            scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: 4.2,
-            availability: 0.7,
-            details: `${rental.carName} from ${rental.company}`,
-            bookingUrl: rental.bookingUrl,
+        // 4. Car Rental (only for distances < 500km)
+        if (distKm < 500) {
+          const carRentals = await getCarRentalOffers(origin[1], origin[0], new Date().toISOString(), new Date(Date.now() + 86400000).toISOString())
+          carRentals.forEach((rental, i) => {
+            providers.push({
+              id: `car-rental-${i}-${rid}`,
+              name: rental.company,
+              mode: "car_rental",
+              type: "car_rental",
+              icon: "🚗",
+              price: rental.price,
+              priceCurrency: "USD",
+              duration: baseSeconds,
+              distance: drivingData.distance,
+              co2: 160,
+              co2Saved: 40,
+              score: 0,
+              scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
+              rating: 4.2,
+              availability: 0.7,
+              details: `${rental.carName} from ${rental.company}`,
+              bookingUrl: rental.bookingUrl,
+              origin,
+              destination,
+            })
           })
-        })
+        }
 
         // 5. Flights
         let flightProviders: ProviderOption[] = []
@@ -240,6 +256,8 @@ export function useRouteEngine() {
             availability: 1,
             details: `${offer.airlineName} · ${offer.stops === 0 ? "Non-stop" : offer.stops + " stops"}`,
             bookingUrl: offer.bookingUrl,
+            origin,
+            destination,
           }))
         }
 
