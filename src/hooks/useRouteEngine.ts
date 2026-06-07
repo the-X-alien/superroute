@@ -1,16 +1,20 @@
 import { useState, useCallback } from "react"
 import { fetchOSRM, haversineKm } from "@/lib/routing"
 import {
-  getRideshareProviders,
   getRegionForCoords,
-  generateFlightOptions,
   computeProviderScore,
   estimatePrice,
   estimateCo2,
   estimateDuration,
   type ProviderOption,
-  type TransportMode,
 } from "@/lib/providers"
+import {
+  getLyftEstimates,
+  getUberEstimates,
+  getFlightOffers,
+  getTransitAgenciesByLocation,
+  getCarRentalOffers,
+} from "@/lib/leaf"
 
 export interface RoutePreferences {
   speed: number
@@ -62,12 +66,13 @@ export function useRouteEngine() {
         }
 
         const distKm = Math.max(1, drivingData.distance / 1000)
-        const region = getRegionForCoords(origin[1], origin[0])
+        const region = await getRegionForCoords(origin[1], origin[0])
         const providers: ProviderOption[] = []
 
         const rid = Math.random() * 10000
         const baseSeconds = drivingData.duration
 
+        // 1. Walking & Cycling
         const addWalk = distKm < 20
         const addCycle = distKm < 30
 
@@ -113,133 +118,130 @@ export function useRouteEngine() {
           })
         }
 
-        for (const sp of region.providers.filter((p) => p.type === "scooter")) {
-          if (distKm > 15) continue
-          const s = rid + providers.length
-          providers.push({
-            id: `scooter-${sp.name.toLowerCase().replace(/\s/g, "-")}-${s}`,
-            name: sp.name,
-            mode: "scooter",
-            type: "scooter",
-            icon: sp.icon,
-            price: estimatePrice(sp.basePrice, sp.pricePerKm, distKm, s),
-            priceCurrency: "USD",
-            duration: estimateDuration(distKm, sp.speedFactor),
-            distance: drivingData.distance,
-            co2: estimateCo2(sp.co2PerKm, distKm, s),
-            co2Saved: Math.round(200 - estimateCo2(sp.co2PerKm, distKm, s)),
-            score: 0,
-            scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: sp.rating,
-            availability: 0.7,
-            details: `${distKm.toFixed(1)} km via scooter`,
-            vehicleType: "Electric Scooter",
-          })
-        }
+        // 2. Rideshare
+        const [lyftEstimates, uberEstimates] = await Promise.all([
+          getLyftEstimates(origin[1], origin[0], destination[1], destination[0]),
+          getUberEstimates(origin[1], origin[0], destination[1], destination[0])
+        ])
 
-        for (const rp of getRideshareProviders()) {
-          const s = rid + providers.length
-          const price = estimatePrice(rp.basePrice, rp.pricePerKm, distKm, s)
-          const co2 = estimateCo2(rp.co2PerKm, distKm, s)
+        lyftEstimates.forEach((est, i) => {
           providers.push({
-            id: `ride-${rp.name.toLowerCase().replace(/[\s\/]/g, "-")}-${s}`,
-            name: rp.name,
+            id: `lyft-${i}-${rid}`,
+            name: est.displayName,
             mode: "rideshare",
-            type: rp.name,
-            icon: rp.icon,
-            price,
+            type: "Lyft",
+            icon: "🚕",
+            price: est.price,
             priceCurrency: "USD",
-            duration: Math.max(estimateDuration(distKm, rp.speedFactor), Math.round(baseSeconds * 0.8)),
-            distance: drivingData.distance,
-            co2,
-            co2Saved: Math.round(Math.max(0, 200 - co2)),
+            duration: est.duration,
+            distance: est.distance,
+            co2: estimateCo2(160, est.distance / 1000, i),
+            co2Saved: 40,
             score: 0,
             scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: rp.rating,
-            availability: 0.85 + (rid / 10000) * 0.15,
-            details: `${rp.name} · est. $${price.toFixed(2)}`,
-            vehicleType: rp.name.includes("XL") || rp.name === "Lyft Lux" || rp.name === "Uber Black" ? "Premium Vehicle" : "Standard Sedan",
+            rating: 4.5,
+            availability: 0.9,
+            details: `Lyft · ${est.displayName}`,
           })
-        }
+        })
 
-        for (const tp of region.transit) {
-          if (distKm > 100) continue
-          const s = rid + providers.length
-          const price = estimatePrice(tp.basePrice, tp.pricePerKm, distKm, s)
-          const co2 = estimateCo2(tp.co2PerKm, distKm, s)
+        uberEstimates.forEach((est, i) => {
           providers.push({
-            id: `transit-${tp.name.toLowerCase().replace(/[\s\/]/g, "-")}-${s}`,
-            name: tp.name,
+            id: `uber-${i}-${rid}`,
+            name: est.displayName,
+            mode: "rideshare",
+            type: "Uber",
+            icon: "🚕",
+            price: est.price,
+            priceCurrency: "USD",
+            duration: est.duration,
+            distance: est.distance,
+            co2: estimateCo2(170, est.distance / 1000, i),
+            co2Saved: 30,
+            score: 0,
+            scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
+            rating: 4.6,
+            availability: 0.95,
+            details: `Uber · ${est.displayName}`,
+          })
+        })
+
+        // 3. Transit
+        const transitAgencies = await getTransitAgenciesByLocation(origin[1], origin[0])
+        transitAgencies.slice(0, 3).forEach((agency, i) => {
+          const s = rid + i
+          providers.push({
+            id: `transit-${agency.onestopId}-${s}`,
+            name: agency.name,
             mode: "transit",
             type: "transit",
-            icon: tp.icon,
-            price,
+            icon: "🚌",
+            price: 2.50,
             priceCurrency: "USD",
-            duration: Math.round(estimateDuration(distKm, tp.speedFactor) * (1 + (rid / 10000) * 0.15)),
+            duration: Math.round(baseSeconds * 1.5),
             distance: drivingData.distance * 1.1,
-            co2,
-            co2Saved: Math.round(Math.max(0, 200 - co2)),
+            co2: 30,
+            co2Saved: 170,
             score: 0,
             scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: tp.rating,
-            availability: 0.7 + (rid / 10000) * 0.2,
-            details: `${tp.name} · $${price.toFixed(2)}`,
-            vehicleType: "Public Transit",
+            rating: 4.0,
+            availability: 0.8,
+            details: `Transit via ${agency.name}`,
           })
-        }
+        })
 
-        for (const tx of region.taxis) {
-          const s = rid + providers.length
-          const price = estimatePrice(tx.basePrice, tx.pricePerKm, distKm, s)
-          const co2 = estimateCo2(tx.co2PerKm, distKm, s)
+        // 4. Car Rental
+        const carRentals = await getCarRentalOffers(origin[1], origin[0], new Date().toISOString(), new Date(Date.now() + 86400000).toISOString())
+        carRentals.forEach((rental, i) => {
           providers.push({
-            id: `taxi-${tx.name.toLowerCase().replace(/[\s\/]/g, "-")}-${s}`,
-            name: tx.name,
-            mode: "taxi",
-            type: "taxi",
-            icon: tx.icon,
-            price,
-            priceCurrency: "USD",
-            duration: Math.max(estimateDuration(distKm, tx.speedFactor), Math.round(baseSeconds * 0.85)),
-            distance: drivingData.distance,
-            co2,
-            co2Saved: Math.round(Math.max(0, 200 - co2)),
-            score: 0,
-            scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: tx.rating,
-            availability: 0.8 + (rid / 10000) * 0.15,
-            details: `${tx.name} · est. $${price.toFixed(2)}`,
-            vehicleType: "Taxi",
-          })
-        }
-
-        for (const cr of region.carRentals) {
-          const s = rid + providers.length
-          const price = estimatePrice(cr.basePrice, cr.pricePerKm, distKm, s)
-          const co2 = estimateCo2(cr.co2PerKm, distKm, s)
-          providers.push({
-            id: `car-${cr.name.toLowerCase().replace(/[\s\/]/g, "-")}-${s}`,
-            name: `${cr.name} Rental`,
+            id: `car-rental-${i}-${rid}`,
+            name: rental.company,
             mode: "car_rental",
             type: "car_rental",
-            icon: cr.icon,
-            price,
+            icon: "🚗",
+            price: rental.price,
             priceCurrency: "USD",
-            duration: Math.max(estimateDuration(distKm, cr.speedFactor), Math.round(baseSeconds * 0.85)),
+            duration: baseSeconds,
             distance: drivingData.distance,
-            co2,
-            co2Saved: Math.round(Math.max(0, 200 - co2)),
+            co2: 160,
+            co2Saved: 40,
             score: 0,
             scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
-            rating: cr.rating,
-            availability: 0.4 + (rid / 10000) * 0.3,
-            details: `${cr.name} · $${price.toFixed(2)} / day`,
-            vehicleType: "Rental Car",
-            bookingUrl: "#",
+            rating: 4.2,
+            availability: 0.7,
+            details: `${rental.carName} from ${rental.company}`,
+            bookingUrl: rental.bookingUrl,
           })
-        }
+        })
 
-        const flightProviders = distKm >= 200 ? generateFlightOptions(origin, destination, region, 20) : []
+        // 5. Flights
+        let flightProviders: ProviderOption[] = []
+        if (distKm >= 300) {
+          const originAirport = region.airports[0]?.code || "SFO"
+          const destRegion = await getRegionForCoords(destination[1], destination[0])
+          const destAirport = destRegion.airports[0]?.code || "LAX"
+          
+          const flightOffers = await getFlightOffers(originAirport, destAirport, new Date(Date.now() + 86400000).toISOString().split('T')[0])
+          flightProviders = flightOffers.map((offer) => ({
+            id: `flight-${offer.id}`,
+            name: offer.airlineName,
+            mode: "flight",
+            type: "flight",
+            icon: "✈️",
+            price: offer.price,
+            priceCurrency: offer.currency,
+            duration: 3600 * 2,
+            distance: haversineKm(origin, destination) * 1000,
+            co2: 250,
+            co2Saved: -50,
+            score: 0,
+            scoreBreakdown: { speed: 0, cost: 0, eco: 0, convenience: 0 },
+            rating: 4.5,
+            availability: 1,
+            details: `${offer.airlineName} · ${offer.stops === 0 ? "Non-stop" : offer.stops + " stops"}`,
+            bookingUrl: offer.bookingUrl,
+          }))
+        }
 
         const pMin = (arr: ProviderOption[], k: "price" | "duration" | "co2") =>
           arr.length ? Math.min(...arr.map((x) => x[k])) : 0
