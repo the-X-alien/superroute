@@ -133,20 +133,7 @@
     opacity: 0.4;
   }
 
-  .mapboxgl-map {
-    border-radius: var(--radius);
-  }
 
-  .mapboxgl-ctrl-geocoder {
-    background: hsl(30 10% 8% / 0.8) !important;
-    border: 1px solid hsl(30 10% 16% / 0.5) !important;
-    color: hsl(35 15% 92%) !important;
-    border-radius: var(--radius) !important;
-  }
-
-  input.mapboxgl-ctrl-geocoder--input {
-    color: hsl(35 15% 92%) !important;
-  }
 }
 
 @keyframes float {

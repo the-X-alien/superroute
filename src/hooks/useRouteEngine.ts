@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react"
-import { fetchOSRM, haversineKm } from "@/lib/mapbox"
+import { fetchOSRM, haversineKm } from "@/lib/routing"
 import {
   getRideshareProviders,
   getRegionForCoords,

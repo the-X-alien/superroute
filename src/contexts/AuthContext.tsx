@@ -6,6 +6,7 @@ interface AuthContextValue {
   user: User | null
   loading: boolean
   signInWithGoogle: () => Promise<{ error: AuthError | null }>
+  signInWithGitHub: () => Promise<{ error: AuthError | null }>
   signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   signInWithGoogle: async () => ({ error: null }),
+  signInWithGitHub: async () => ({ error: null }),
   signInWithEmail: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
   signOut: async () => {},
@@ -54,6 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!supabase) return { error: new Error("Supabase not configured") as AuthError & { message: string } }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: { redirectTo: window.location.origin },
+      })
+      return { error }
+    },
+    signInWithGitHub: async () => {
+      if (!supabase) return { error: new Error("Supabase not configured") as AuthError & { message: string } }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
         options: { redirectTo: window.location.origin },
       })
       return { error }

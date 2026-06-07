@@ -1,15 +1,3 @@
-export function getMapboxToken(): string {
-  return import.meta.env.VITE_MAPBOX_TOKEN as string || ""
-}
-
-export function setMapboxToken(token: string) {
-  // noop
-}
-
-export function hasMapboxToken(): boolean {
-  return !!getMapboxToken()
-}
-
 export interface OSRMResponse {
   distance: number
   duration: number
