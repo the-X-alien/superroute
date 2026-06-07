@@ -1,11 +1,15 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
-import { Trophy, TrendingUp, Flame, Star, Medal, Award, Zap } from "lucide-react"
+import { Trophy, TrendingUp, Flame, Star, Medal, Award, Zap, LogIn } from "lucide-react"
 import { fadeUp, staggerContainer, staggerChild, counterAnimation } from "@/lib/animations"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { formatPoints } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
+import AuthModal from "./AuthModal"
 
 const stats = [
   { icon: Trophy, label: "Total SuperPoints", value: 2847, color: "text-[var(--color-primary)]" },
@@ -32,8 +36,29 @@ function Leaf(props: any) {
 }
 
 export default function Gamification() {
+  const { user } = useAuth()
+  const [authOpen, setAuthOpen] = useState(false)
+
+  const leaderboardUsers = user
+    ? [
+        { name: "EcoRider42", points: 12500, rank: 1 },
+        { name: "RouteNinja", points: 10800, rank: 2 },
+        { name: "GreenCommuter", points: 9200, rank: 3 },
+        { name: user.displayName || "You", points: 8100, rank: 4 },
+        { name: "TransitKing", points: 7900, rank: 5 },
+        { name: "BikeLife", points: 7400, rank: 6 },
+      ]
+    : [
+        { name: "EcoRider42", points: 12500, rank: 1 },
+        { name: "RouteNinja", points: 10800, rank: 2 },
+        { name: "GreenCommuter", points: 9200, rank: 3 },
+        { name: "???", points: 0, rank: 4, locked: true },
+        { name: "TransitKing", points: 7900, rank: 5 },
+        { name: "BikeLife", points: 7400, rank: 6 },
+      ]
+
   return (
-    <section className="relative py-32 px-4">
+    <section id="gamification" className="relative py-32 px-4">
       <div
         className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none"
         style={{
@@ -113,39 +138,45 @@ export default function Gamification() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      { name: "EcoRider42", points: 12500, rank: 1 },
-                      { name: "RouteNinja", points: 10800, rank: 2 },
-                      { name: "GreenCommuter", points: 9200, rank: 3 },
-                      { name: "TransitKing", points: 8100, rank: 4 },
-                      { name: "BikeLife", points: 7400, rank: 5 },
-                    ].map((user) => (
+                    {leaderboardUsers.map((entry) => (
                       <div
-                        key={user.rank}
+                        key={entry.rank}
                         className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-muted)]/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <span
                             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                              user.rank === 1
+                              entry.rank === 1
                                 ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                                : user.rank === 2
+                                : entry.rank === 2
                                   ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
-                                  : user.rank === 3
+                                  : entry.rank === 3
                                     ? "bg-[var(--color-accent)]/50 text-[var(--color-primary)]"
                                     : "text-[var(--color-muted-foreground)]"
                             }`}
                           >
-                            {user.rank}
+                            {entry.rank}
                           </span>
-                          <span className="text-sm font-medium">{user.name}</span>
+                          <span className={`text-sm font-medium ${(entry as any).locked ? "text-[var(--color-muted-foreground)]" : ""}`}>
+                            {entry.name}
+                          </span>
                         </div>
-                        <span className="font-display font-bold text-sm leading-[0.93]">
-                          {formatPoints(user.points)} pts
-                        </span>
+                        {(entry as any).locked ? (
+                          <button
+                            onClick={() => setAuthOpen(true)}
+                            className="flex items-center gap-1.5 text-xs text-[var(--color-primary)] hover:underline"
+                          >
+                            <LogIn className="w-3 h-3" /> Sign in to claim
+                          </button>
+                        ) : (
+                          <span className="font-display font-bold text-sm leading-[0.93]">
+                            {formatPoints(entry.points)} pts
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
+                  <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
                 </CardContent>
               </Card>
             </motion.div>
