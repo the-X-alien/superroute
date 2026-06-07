@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { formatPoints } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
 import AuthModal from "@/components/AuthModal"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
 
 const badges = [
   { label: "Eco Warrior", icon: Leaf, variant: "default" as const },
@@ -21,21 +22,88 @@ const badges = [
   { label: "Top Scorer", icon: Award, variant: "accent" as const },
 ]
 
-const leaderboardUsers = [
-  { name: "EcoRider42", points: 12500, rank: 1 },
-  { name: "RouteNinja", points: 10800, rank: 2 },
-  { name: "GreenCommuter", points: 9200, rank: 3 },
-  { name: "TransitKing", points: 8100, rank: 4 },
-  { name: "BikeLife", points: 7400, rank: 5 },
-  { name: "UrbanGlider", points: 6800, rank: 6 },
-  { name: "TrainFan", points: 6200, rank: 7 },
-  { name: "WalkMore", points: 5800, rank: 8 },
-]
+interface LeaderboardEntry {
+  rank: number
+  display_name: string | null
+  points: number
+  avatar_url: string | null
+}
 
 export default function Profile() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [authOpen, setAuthOpen] = useState(false)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [userPoints, setUserPoints] = useState(0)
+  const [userRank, setUserRank] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      if (!user || !supabase) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        // Fetch top 20 users by points
+        const { data: topUsers, error } = await supabase
+          .from("profiles")
+          .select("display_name, points, avatar_url")
+          .order("points", { ascending: false })
+          .limit(20)
+
+        if (error) throw error
+
+        const entries: LeaderboardEntry[] = (topUsers || []).map((u, i) => ({
+          rank: i + 1,
+          display_name: u.display_name,
+          points: u.points || 0,
+          avatar_url: u.avatar_url,
+        }))
+        setLeaderboard(entries)
+
+        // Find current user's rank
+        const userIndex = entries.findIndex(e => e.display_name?.toLowerCase() === user.user_metadata?.full_name?.toLowerCase())
+        if (userIndex !== -1) {
+          setUserRank(userIndex + 1)
+        } else {
+          // Fetch user's own points and calculate rank
+          const { data: userProfile } = await supabase
+            .from("profiles")
+            .select("points")
+            .eq("id", user.id)
+            .single()
+          
+          if (userProfile) {
+            setUserPoints(userProfile.points || 0)
+            const { count } = await supabase
+              .from("profiles")
+              .select("*", { count: "exact", head: true })
+              .gt("points", userProfile.points || 0)
+            setUserRank((count || 0) + 1)
+          }
+        }
+
+        // Set current user points from their profile
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("points")
+          .eq("id", user.id)
+          .single()
+        
+        if (userProfile) {
+          setUserPoints(userProfile.points || 0)
+        }
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLeaderboard()
+  }, [user])
 
   if (!user) {
     return (
@@ -81,8 +149,8 @@ export default function Profile() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: Trophy, label: "SuperPoints", value: formatPoints(2847), color: "text-[var(--color-primary)]" },
-              { icon: TrendingUp, label: "Global Rank", value: "Top 12%", color: "text-[var(--color-primary)]" },
+              { icon: Trophy, label: "SuperPoints", value: formatPoints(userPoints), color: "text-[var(--color-primary)]" },
+              { icon: TrendingUp, label: "Global Rank", value: userRank ? `#${userRank}` : "—", color: "text-[var(--color-primary)]" },
               { icon: Flame, label: "Streak", value: "7 days", color: "text-[var(--color-primary)]" },
             ].map((s) => (
               <Card key={s.label} className="text-center">
@@ -125,24 +193,30 @@ export default function Profile() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {leaderboardUsers.map((entry) => {
-                      const userName = (user.user_metadata?.full_name || user.email?.split("@")[0] || "").toLowerCase()
-                      const isYou = entry.name.toLowerCase().includes(userName.split(" ")[0]) || (entry.rank === 4 && !leaderboardUsers.find((u) => u.name === "You"))
-                      return (
-                        <div key={entry.rank} className={`flex items-center justify-between p-2.5 rounded-lg ${isYou ? "bg-[var(--color-primary)]/10" : "hover:bg-[var(--color-muted)]/50"} transition-colors`}>
-                          <div className="flex items-center gap-3">
-                            <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                              entry.rank === 1 ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                              : entry.rank === 2 ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
-                              : entry.rank === 3 ? "bg-[var(--color-accent)]/50 text-[var(--color-primary)]"
-                              : "text-[var(--color-muted-foreground)]"
-                            }`}>{entry.rank}</span>
-                            <span className="text-sm font-medium">{isYou ? "You" : entry.name}</span>
+                    {loading ? (
+                      <p className="text-sm text-[var(--color-muted-foreground)] text-center py-4">Loading...</p>
+                    ) : leaderboard.length === 0 ? (
+                      <p className="text-sm text-[var(--color-muted-foreground)] text-center py-4">No users yet</p>
+                    ) : (
+                      leaderboard.map((entry) => {
+                        const currentUserName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || ""
+                        const isYou = entry.display_name?.toLowerCase() === currentUserName?.toLowerCase()
+                        return (
+                          <div key={entry.rank} className={`flex items-center justify-between p-2.5 rounded-lg ${isYou ? "bg-[var(--color-primary)]/10" : "hover:bg-[var(--color-muted)]/50"} transition-colors`}>
+                            <div className="flex items-center gap-3">
+                              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                                entry.rank === 1 ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+                                : entry.rank === 2 ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
+                                : entry.rank === 3 ? "bg-[var(--color-accent)]/50 text-[var(--color-primary)]"
+                                : "text-[var(--color-muted-foreground)]"
+                              }`}>{entry.rank}</span>
+                              <span className="text-sm font-medium">{isYou ? "You" : (entry.display_name || "Anonymous")}</span>
+                            </div>
+                            <span className="font-display font-bold text-sm leading-[0.93]">{formatPoints(entry.points)} pts</span>
                           </div>
-                          <span className="font-display font-bold text-sm leading-[0.93]">{formatPoints(entry.points)} pts</span>
-                        </div>
-                      )
-                    })}
+                        )
+                      })
+                    )}
                   </div>
                 </CardContent>
               </Card>
